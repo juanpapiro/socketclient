@@ -26,11 +26,11 @@ public class SSLContextClientConfig {
 		
 		try {
 			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			ks.load(new FileInputStream(getClass().getResource("/clientkeystore").getPath()), "123456".toCharArray());	
+			ks.load(new FileInputStream(getClass().getResource("/canclientkeystore").getPath()), "Cielo_2022".toCharArray());	
 			ks.setEntry("certserver", new KeyStore.TrustedCertificateEntry(generateCertificate()), null);
 			
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			kmf.init(ks, "123456".toCharArray());
+			kmf.init(ks, "Cielo_2022".toCharArray());
 
 		    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
 		    tmf.init(ks);
