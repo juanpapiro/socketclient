@@ -16,9 +16,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @Configuration
 public class SSLContextClientConfig {
 	
+	public static final String KEYSTORE = "/clientkeystore";
+	public static final String STOREPASS = "123456";
+	public static final String SERVERCERT = "/certserver.cer";
+	public static final String SERVERCERTNEW = "/certservernew.cer";
 	
 	@Bean
 	@Qualifier("sslContextSimpleClient")
@@ -26,11 +33,12 @@ public class SSLContextClientConfig {
 		
 		try {
 			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			ks.load(new FileInputStream(getClass().getResource("/canclientkeystore").getPath()), "Cielo_2022".toCharArray());	
-			ks.setEntry("certserver", new KeyStore.TrustedCertificateEntry(generateCertificate()), null);
+			ks.load(new FileInputStream(getClass().getResource(KEYSTORE).getPath()), null);	
+			ks.setEntry("certserver", new KeyStore.TrustedCertificateEntry(generateCertificate(SERVERCERT)), null);
+			ks.setEntry("certservernew", new KeyStore.TrustedCertificateEntry(generateCertificate(SERVERCERTNEW)), null);
 			
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			kmf.init(ks, "Cielo_2022".toCharArray());
+			kmf.init(ks, STOREPASS.toCharArray());
 
 		    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
 		    tmf.init(ks);
@@ -40,54 +48,25 @@ public class SSLContextClientConfig {
 			
 			return contextoSSL;
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e);
 			return null;
 		}
 	}
 	
 	
-//	@Bean
-//	@Qualifier("sslContextNeedClientAuth")
-	public SSLContext sslContextConfigJKS() {
-		
-		try {
-			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			ks.load(new FileInputStream(getClass().getResource("/clientkeystore").getPath()), "123456".toCharArray());
-			ks.setCertificateEntry("certserver", generateCertificate());	
-//			ks.setEntry("certserver", new KeyStore.TrustedCertificateEntry(generateCertificate()), null);
-			
-//			KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-//			trustStore.load(new FileInputStream(getClass().getResource("/clientkeystore").getPath()), "123456".toCharArray());
-
-			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			kmf.init(ks, "123456".toCharArray());
-
-//			TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-		    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-		    tmf.init(ks);
-		    			
-			SSLContext contextoSSL = SSLContext.getInstance("TLS");
-//			contextoSSL.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());		
-			contextoSSL.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);		
-			
-			return contextoSSL;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
-	public Certificate generateCertificate() {
-		Certificate ca = null;
+	public Certificate generateCertificate(String fileName) {
 		try (InputStream caInput = new BufferedInputStream(
-				new FileInputStream(getClass().getResource("/certserver.cer").getPath()))){
+				new FileInputStream(getClass().getResource(fileName).getPath()))){
 			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			ca = cf.generateCertificate(caInput);
-			System.out.println("client=" + ((X509Certificate) ca).getSubjectDN());				
+			Certificate ca = cf.generateCertificate(caInput);
+			X509Certificate x509 = (X509Certificate) ca;
+			log.info("SubjectDN: {} - Algoritmo: {} - Tipo: {}", 
+					x509.getSubjectDN(), x509.getSigAlgName(), x509.getType());
+			return ca;
 		} catch(Exception e) {
-			e.printStackTrace();
+			log.error(e);
 		}
-		return ca;
+		return null;
 	}
 	
 

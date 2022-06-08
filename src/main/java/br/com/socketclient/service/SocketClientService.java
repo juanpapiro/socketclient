@@ -6,15 +6,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.text.MessageFormat;
-
-import javax.net.ssl.HandshakeCompletedEvent;
-import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
 import org.springframework.stereotype.Service;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 @Service
 public class SocketClientService {
 	
@@ -36,11 +33,11 @@ public class SocketClientService {
 			String resp = br.readLine();
 			
 			socketClient.close();
-			System.out.println(MessageFormat.format("Tempo processamento: {0} nanossegundos", System.nanoTime() - time));
+			log.info("Tempo processamento: {} nanossegundos", System.nanoTime() - time);
 			return resp;
 			
 		} catch(Exception e) {
-			System.out.println(e);
+			log.error(e);
 			return "Falha de comunicação com servidor";
 		}
 		
